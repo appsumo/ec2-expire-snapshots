@@ -113,9 +113,11 @@ $Debug and warn "$Prog: Using AWS access key: $aws_access_key_id\n";
 my $ec2 = Net::Amazon::EC2->new(
     ((! $use_iam_role) ? (AWSAccessKeyId  => $aws_access_key_id,) : () ),
     ((! $use_iam_role) ? (SecretAccessKey => $aws_secret_access_key) : () ),
+    signature_version => 4,
+    ($region ? (region => $region) : ()),
     ($ec2_endpoint ? (base_url => $ec2_endpoint) : ()),
-    # ($Debug ? (debug => 1) : ()),
-  );
+    ($Debug ? (debug => 1) : ()),
+);
 
 my $snapshots_for_volumes = snapshots_for_volumes($ec2,$volume_id_in_tag,@volume_ids);
 for my $volume_id ( @volume_ids ) {
@@ -348,7 +350,7 @@ sub expired_for_constraints {
     #TBD: Implement expiration_tag_optional
     die "$Prog: ERROR: Option 'expiration_tag_optional' is not yet implemented"
         if $constraints->{expiration_tag_optional};
-    
+
     my %keep_ids = map { $_->{id} => 1 } @keep_list;
     my $expire_list = [];
     for my $item ( @$candidate_list ) {
@@ -590,7 +592,7 @@ Specify a different EC2 region like "eu-west-1".  Defaults to
 =item C<--volume-id-in-tag TAGNAME>
 
 Specifies the name of a tag to look for on each EBS snapshot
-indicating what volume-id to associate with this snapshot, 
+indicating what volume-id to associate with this snapshot,
 replacing the volume-id that is returned by the API. The common
 use is for when snapshots are copied across regions. This is so
 a consistent expiration schedule can be kept, without regards to
